@@ -104,6 +104,8 @@ class VertexAITabularTrainer(VertexAIWorker):
         is_default_version=True,
         disable_early_stopping=False,
         sync=False)
+
+
     job.wait_for_resource_creation()
     pipeline_name = job.resource_name
     pipeline = self._get_training_pipeline(pipeline_client, pipeline_name)
