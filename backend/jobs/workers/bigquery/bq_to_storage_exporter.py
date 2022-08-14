@@ -44,8 +44,10 @@ class BQToStorageExporter(bq_worker.BQWorker):
         print_header=self._params['print_header'],
         destination_format=destination_format,
         compression='GZIP' if self._params['export_gzip'] else 'NONE')
+
     dataset_ref = bigquery.DatasetReference(
         self._params['bq_project_id'], self._params['bq_dataset_id'])
+
     client = self._get_client()
     job = client.extract_table(
         bigquery.TableReference(dataset_ref, self._params['bq_table_id']),

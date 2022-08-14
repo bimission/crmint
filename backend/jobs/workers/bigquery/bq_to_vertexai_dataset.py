@@ -30,36 +30,50 @@ class BQToVertexAIDataset(VertexAIWorker):
       ('clean_up', 'boolean', True, True, 'Clean Up'),
   ]
 
+
   def _execute(self):
-    aiplatform.init(
-        project=self._get_project_id(),
-        location=self._params['vertexai_region'],
-    )
+
     project_id = self._params['bq_project_id']
     dataset_id = self._params['bq_dataset_id']
     table_id = self._params['bq_table_id']
     vertexai_region = self._params['vertexai_region']
     vertexai_dataset_name = self._params['vertexai_dataset_name']
     dataset_client = self._get_vertexai_dataset_client(vertexai_region)
+
+    aiplatform.init(
+      project=self._get_project_id(),
+      location=self._params['vertexai_region'],
+    )
+
     if not vertexai_dataset_name:
       display_name = f'{project_id}.{dataset_id}.{table_id}'
     else:
       display_name = vertexai_dataset_name
+
     if self._params['clean_up']:
       try:
         datasets = dataset_client.list_datasets({
             'parent': self._get_parent_resource(vertexai_region),
             'filter': f'display_name="{display_name}"',
             'order_by': 'create_time asc'})
+
         if datasets:
           for d in list(datasets)[:-1]:
             dataset_client.delete_dataset({'name': d.name})
             self.log_info(f'Deleted dataset: {d.name}')
+
       except Exception as e:
         self.log_info(f'Exception: {e}')
-    dataset = aiplatform.TabularDataset.create(
-        display_name=display_name,
-        bq_source=f'bq://{project_id}.{dataset_id}.{table_id}')
-    dataset.wait()
-    self.log_info(f'Dataset created: {dataset.resource_name}')
+
+    tabular_dataset_client = self._get_tabular_dataset_client()
+    tabular_dataset = tabular_dataset_client.create(
+      display_name=display_name,
+      bq_source=f'bq://{project_id}.{dataset_id}.{table_id}'
+    )
+    tabular_dataset.wait()
+
+    self.log_info(f'Dataset created: {tabular_dataset.resource_name}')
     self.log_info('Finished successfully')
+
+  def _get_tabular_dataset_client(self):
+      return  aiplatform.TabularDataset

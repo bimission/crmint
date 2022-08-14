@@ -6,3 +6,5 @@ freezegun==0.3.10
 mock==2.0.0
 pytest==7.1.2
 pytest-cov==3.0.0
+
+setuptools~=57.4.0
