@@ -1,16 +1,10 @@
 import pytest
 from unittest import mock
-from importlib import reload
-from unittest.mock import patch
-from google import auth
-from google.auth import credentials as auth_credentials
 
 from absl.testing import absltest
 from absl.testing import parameterized
 from google.auth import credentials
 from google.cloud import aiplatform
-from google.cloud.aiplatform import datasets
-from google.cloud.aiplatform import initializer
 from google.cloud.aiplatform import schema
 from google.cloud.aiplatform.compat.services import dataset_service_client
 from google.cloud.aiplatform.compat.types import (
@@ -32,12 +26,7 @@ _TEST_DESCRIPTION = "test description"
 
 # metadata_schema_uri
 _TEST_METADATA_SCHEMA_URI_TABULAR = schema.dataset.metadata.tabular
-_TEST_SOURCE_URI_BQ = "bq://my-project.my-dataset.table"
 _TEST_RESOURCE_NAME = f"projects/{_TEST_PROJECT}/locations/{_TEST_LOCATION}/datasets/{_TEST_ID}"
-
-_TEST_METADATA_TABULAR_BQ = {
-  "inputConfig": {"bigquerySource": {"uri": _TEST_SOURCE_URI_BQ}}
-}
 
 
 
@@ -53,7 +42,7 @@ def _make_credentials():
 
 
 
-class BQToVertexAIDatasetExporterTest(parameterized.TestCase):
+class VertexAITabularTrainerTest(parameterized.TestCase):
 
 
     @parameterized.parameters(
@@ -72,11 +61,22 @@ class BQToVertexAIDatasetExporterTest(parameterized.TestCase):
     )
     def test_create_veretxai_dataset(self,
          cfg_vertexai_dataset_name, cfg_clean_up):
+
+      if not cfg_vertexai_dataset_name:
+          display_name = f'{_TEST_PROJECT}.{_TEST_DISPLAY_NAME}.{_TEST_TABLE_NAME}'
+      else:
+          display_name = cfg_vertexai_dataset_name
+
+      bq_source_uri = f'bq://{_TEST_PROJECT}.{_TEST_DISPLAY_NAME}.{_TEST_TABLE_NAME}'
+
       worker_inst = bq_to_vertexai_dataset.BQToVertexAIDataset(
         ##params
         {
           'vertexai_dataset_name': cfg_vertexai_dataset_name,
           'clean_up': cfg_clean_up,
+          'bq_project_id': _TEST_PROJECT,
+          'bq_dataset_id': _TEST_DISPLAY_NAME,
+          'bq_table_id': _TEST_TABLE_NAME
         },
         ##pipeline_id: int,
         pipeline_id=1,
@@ -89,10 +89,6 @@ class BQToVertexAIDatasetExporterTest(parameterized.TestCase):
       )
 
 
-      if not cfg_vertexai_dataset_name:
-        display_name = f'{_TEST_PROJECT}.{_TEST_DISPLAY_NAME}.{_TEST_TABLE_NAME}'
-      else:
-        display_name = cfg_vertexai_dataset_name
 
 
       mock_datasets_client = mock.create_autospec(
@@ -102,7 +98,6 @@ class BQToVertexAIDatasetExporterTest(parameterized.TestCase):
       mock_dataset = mock.Mock(gca_dataset.Dataset(
         display_name=display_name,
         metadata_schema_uri=_TEST_METADATA_SCHEMA_URI_TABULAR,
-        metadata=_TEST_METADATA_TABULAR_BQ,
         name=display_name
       ))
 
@@ -168,12 +163,17 @@ class BQToVertexAIDatasetExporterTest(parameterized.TestCase):
       )
 
       worker_inst._execute()
+
       ## asserts
-      if cfg_clean_up:
+      if cfg_clean_up: ##list_datasets and delete is called only if Clean_up is True
          mock_datasets_client.list_datasets.assert_called_once()
          mock_datasets_client.delete_dataset.assert_called_once()
-      mocked_tablular_dataset_client.create.assert_called_once()
-
+      if not cfg_vertexai_dataset_name: ##when dataset_name is not provided then dataset name should be set to default name
+        mocked_tablular_dataset_client.create.assert_called_once_with(
+        display_name = display_name, bq_source = bq_source_uri
+        )
+      else:
+        mocked_tablular_dataset_client.create.assert_called()
 
 if __name__ == '__main__':
   absltest.main()
