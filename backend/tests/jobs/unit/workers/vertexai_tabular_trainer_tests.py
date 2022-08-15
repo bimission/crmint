@@ -150,8 +150,9 @@ class VertexAITabularTrainerTest(parameterized.TestCase):
     )
 
     worker_inst._execute()
-    assert 2+2 == 4
+    mock_automl_job.run.assert_called_once()
 
+  """
   def test_get_vertexai_tabular_dataset(self):
     assert 2+2 == 4
   def test_clean_up_models(self):
@@ -159,7 +160,7 @@ class VertexAITabularTrainerTest(parameterized.TestCase):
 
   def test_create_automl_tabular_training_job(self):
     assert 2+2 == 4
-
+  """
 
 if __name__ == '__main__':
   absltest.main()
