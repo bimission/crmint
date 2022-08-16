@@ -102,12 +102,12 @@ class VertexAIBatchPredictorToBQTest(parameterized.TestCase):
 
 
     ## mock DatasetServiceClient and then inject as result of _get_vertexai_dataset_client
-    mock_dataset_client = mock.create_autospec(
+    mock_job_client = mock.create_autospec(
       job_service_client.JobServiceClient, instance=True, spec_set=True)
 
     self.enter_context(
         mock.patch.object( worker_inst,'_get_vertexai_job_client',
-             return_value=mock_dataset_client,
+             return_value=mock_job_client,
              autospec=True, spec_set=True
         )
     )
