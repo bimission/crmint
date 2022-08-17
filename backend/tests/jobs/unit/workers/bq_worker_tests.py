@@ -43,6 +43,7 @@ class BQWorkerTest(parameterized.TestCase):
     job = bigquery.job.QueryJob('JOBID', 'query', mock_client)
     self.enter_context(
         mock.patch.object(job, 'done', return_value=job_is_done, autospec=True))
+
     patched_enqueue = self.enter_context(
         mock.patch.object(
             worker_inst,

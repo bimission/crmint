@@ -100,6 +100,7 @@ class VertexAIWorker(Worker):
         delay = [5, 10, 15, 20, 30][int(waiting_time / 60)]
       time.sleep(delay)
       waiting_time += delay
+
     if pipeline.state == ps.PipelineState.PIPELINE_STATE_FAILED:
       raise WorkerException(f'Training pipeline {pipeline.name} failed.')
 
