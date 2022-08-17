@@ -311,7 +311,7 @@ class VertexAIWorkerTests(parameterized.TestCase):
   ##_wait_for_pipeline(self, pipeline):
   @parameterized.parameters(
     {"cfg_job_state": gca_job_state.JobState.JOB_STATE_SUCCEEDED},
-    ##{"cfg_job_state": gca_job_state.JobState.JOB_STATE_FAILED},
+    {"cfg_job_state": gca_job_state.JobState.JOB_STATE_FAILED},
     {"cfg_job_state": gca_job_state.JobState.JOB_STATE_RUNNING},
   )
   def test_wait_for_job(self, cfg_job_state):
@@ -366,7 +366,7 @@ class VertexAIWorkerTests(parameterized.TestCase):
   ##_clean_up_training_pipelines(self, pipeline_client, project, region):
   @parameterized.parameters(
       {"cfg_pipeline_state": gca_pipeline_state.PipelineState.PIPELINE_STATE_SUCCEEDED},
-      #{"cfg_pipeline_state": gca_pipeline_state.PipelineState.PIPELINE_STATE_FAILED},
+      {"cfg_pipeline_state": gca_pipeline_state.PipelineState.PIPELINE_STATE_FAILED},
       {"cfg_pipeline_state": gca_pipeline_state.PipelineState.PIPELINE_STATE_RUNNING},
   )
   def test_clean_up_training_pipelines(self, cfg_pipeline_state):

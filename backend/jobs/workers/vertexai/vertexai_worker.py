@@ -88,7 +88,7 @@ class VertexAIWorker(Worker):
     delay = 5
     waiting_time = 5
     time.sleep(delay)
-    while pipeline.state != ps.PipelineState.PIPELINE_STATE_SUCCEEDED:
+    while pipeline.state not in _PIPELINE_COMPLETE_STATES:
       if waiting_time > 300:  # Once 5 minute has passed, spawn VertexAIWaiter.
         self._enqueue(
             'VertexAIWaiter', {
@@ -112,7 +112,7 @@ class VertexAIWorker(Worker):
     delay = 5
     waiting_time = 5
     time.sleep(delay)
-    while job.state != js.JobState.JOB_STATE_SUCCEEDED:
+    while job.state not in _JOB_COMPLETE_STATES:
       if waiting_time > 300:  # Once 5 minute has passed, spawn VertexAIWaiter.
         self._enqueue(
             'VertexAIWaiter', {
