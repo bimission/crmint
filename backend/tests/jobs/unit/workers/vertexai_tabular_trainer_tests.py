@@ -28,6 +28,8 @@ _TEST_DATASET_METADATA_SCHEMA_URI_TABULAR = schema.dataset.metadata.tabular
 
 _TEST_AUTOML_JOB_RESOURCE_NAME = "test-automl-job"
 _TEST_VERETXAI_MODEL_NAME = "test-model"
+_TEST_PREDICTION_TYPE = "regression"
+_TEST_BUDGET_HOURS = 1
 _TEST_PIPELINE_RESOURCE_NAME = (
   "projects/my-project/locations/us-central1/trainingPipelines/12345"
 )
@@ -42,17 +44,23 @@ class VertexAITabularTrainerTest(parameterized.TestCase):
   @parameterized.parameters(
   {
     'cfg_vertexai_model_name': 'xxxx',
-    'cfg_clean_up': True
+    'cfg_clean_up': True,
+    'cfg_budget_hours': _TEST_BUDGET_HOURS,
+    'cfg_target_column': 'converters'
   },)
   def test_execute(self,
-          cfg_vertexai_model_name,
-          cfg_clean_up):
+                   cfg_vertexai_model_name,
+                   cfg_clean_up,
+                   cfg_budget_hours,
+                   cfg_target_column):
 
     worker_inst = vertexai_tabular_trainer.VertexAITabularTrainer(
       ##params
       {
         'clean_up': cfg_clean_up,
         'vertexai_model_name': cfg_vertexai_model_name,
+        'budget_hours': cfg_budget_hours,
+        'target_column': cfg_target_column
       },
       ##pipeline_id: int,
       pipeline_id=1,
@@ -130,10 +138,11 @@ class VertexAITabularTrainerTest(parameterized.TestCase):
     ## mock AutoMLTabularTrainingJob and then inject as result of _create_automl_tabular_training_job
     mock_automl_job = mock.create_autospec(
       aiplatform.AutoMLTabularTrainingJob, instance=True, spec_set=True)
+    mock_automl_job.resource_name=_TEST_AUTOML_JOB_RESOURCE_NAME
 
     mock_automl_job.run.return_value = None
     mock_automl_job.wait_for_resource_creation.return_value = None
-    mock_automl_job.resource_name=_TEST_AUTOML_JOB_RESOURCE_NAME
+
 
     self.enter_context(
       mock.patch.object( worker_inst,'_create_automl_tabular_training_job',
@@ -151,16 +160,16 @@ class VertexAITabularTrainerTest(parameterized.TestCase):
 
     worker_inst._execute()
     mock_automl_job.run.assert_called_once()
+    mock_automl_job.run.assert_called_once_with(
+      dataset=mock_dataset,
+      target_column=cfg_target_column,
+      budget_milli_node_hours=str(cfg_budget_hours * 1000),
+      model_display_name=cfg_vertexai_model_name,
+      is_default_version=True,
+      disable_early_stopping=False,
+      sync=False
+    )
 
-  """
-  def test_get_vertexai_tabular_dataset(self):
-    assert 2+2 == 4
-  def test_clean_up_models(self):
-    assert 2+2 == 4
-
-  def test_create_automl_tabular_training_job(self):
-    assert 2+2 == 4
-  """
 
 if __name__ == '__main__':
   absltest.main()
