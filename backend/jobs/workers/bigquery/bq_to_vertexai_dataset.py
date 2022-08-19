@@ -65,6 +65,7 @@ class BQToVertexAIDataset(VertexAIWorker):
       except Exception as e:
         self.log_info(f'Exception: {e}')
 
+
     tabular_dataset_client = self._get_tabular_dataset_client()
     tabular_dataset = tabular_dataset_client.create(
       display_name=display_name,

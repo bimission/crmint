@@ -398,7 +398,6 @@ class VertexAIWorkerTests(parameterized.TestCase):
         )
       )
 
-
       mock_pipeline = mock_pipeline_client.get_training_pipeline()
       ## build list of pipelines. Put two items because main code is always leaving one
       mock_pipeline_client.list_training_pipelines.return_value = [mock_pipeline, mock_pipeline]

@@ -5,6 +5,7 @@ from absl.testing import absltest
 from absl.testing import parameterized
 from google.auth import credentials
 from google.cloud import aiplatform
+from google.cloud.aiplatform import datasets
 from google.cloud.aiplatform import schema
 from google.cloud.aiplatform.compat.services import dataset_service_client
 from google.cloud.aiplatform.compat.types import (
@@ -60,7 +61,7 @@ class VertexAITabularTrainerTest(parameterized.TestCase):
       },
     )
     def test_create_veretxai_dataset(self,
-         cfg_vertexai_dataset_name, cfg_clean_up):
+                                     cfg_vertexai_dataset_name, cfg_clean_up):
 
       if not cfg_vertexai_dataset_name:
           display_name = f'{_TEST_PROJECT}.{_TEST_DISPLAY_NAME}.{_TEST_TABLE_NAME}'
@@ -91,34 +92,33 @@ class VertexAITabularTrainerTest(parameterized.TestCase):
 
 
 
+      ##mock_datasets_client = mock.create_autospec(
+      ##   dataset_service_client.DatasetServiceClient, instance=True, spec_set=True)
+
       mock_datasets_client = mock.create_autospec(
-         dataset_service_client.DatasetServiceClient, instance=True, spec_set=True)
+        dataset_service_client.DatasetServiceClient,  instance=True, spec_set=True)
 
-
-      mock_dataset = mock.Mock(gca_dataset.Dataset(
-        display_name=display_name,
+      mock_datasets_client.get_dataset.return_value = gca_dataset.Dataset(
+        display_name=_TEST_DISPLAY_NAME,
         metadata_schema_uri=_TEST_METADATA_SCHEMA_URI_TABULAR,
-        name=display_name
-      ))
+        name=display_name,
+      )
+
+      mock_dataset = mock_datasets_client.get_dataset()
 
 
       mock_datasets_client.list_datasets.return_value = [mock_dataset, mock_dataset]
-
-      delete_dataset_lro_mock = mock.Mock(operation.Operation)
-      delete_dataset_lro_mock.result.return_value = (
-        gca_dataset_service.DeleteDatasetRequest()
-      )
-
-      mock_datasets_client.delete_dataset.return_value = delete_dataset_lro_mock
-
-      mock_tabular_dataset = mock_dataset
-      mock_tabular_dataset.resource_name = _TEST_RESOURCE_NAME
-
-      mock_tabular_dataset.wait = mock.Mock(True)
+      mock_datasets_client.delete_dataset.return_value = None
 
 
       mocked_tablular_dataset_client = mock.create_autospec(
-        aiplatform.datasets.tabular_dataset.TabularDataset, instance=True, spec_set=True)
+        aiplatform.TabularDataset, instance=True, spec_set=True)
+
+
+      mock_tabular_dataset = mock.create_autospec(
+        datasets.TabularDataset, instance=True, spec_set=True)
+      mock_tabular_dataset.wait.return_value= None
+
       mocked_tablular_dataset_client.create.return_value = mock_tabular_dataset
 
 
